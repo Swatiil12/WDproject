@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BMI Converter App</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      background-color: #f2f2f2;
+    }
+
+    #homeImage {
+      width: 300px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+      display: none;
+    }
+
+    h1 {
+      margin-bottom: 1.2rem;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      background: #f9f9f9;
+      text-align: left;
+    }
+
+    #result, #bmiAdvice {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #555;
+    }
+
+    #homePage {
+      display: block;
+    }
+
+    ul {
+      text-align: left;
+      padding-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Home Page -->
+  <div class="container" id="homePage">
+    <img src="image.jpeg" alt="BMI Logo" id="homeImage">
+    <h1>BMI Converter</h1>
+    <button onclick="goToLogin()">Login</button>
+    <button onclick="goToAdminLogin()">Admin</button>
+  </div>
+
+  <!-- Login Page -->
+  <div class="container" id="loginPage">
+    <h1>User Login</h1>
+    <input type="text" id="name" placeholder="Enter your name" />
+    <select id="gender">
+      <option value="">Select Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+    <input type="text" id="contact" placeholder="Enter contact number" />
+    <button onclick="submitLogin()">Continue</button>
+    <button onclick="goHome()">Back</button>
+  </div>
+
+  <!-- BMI Page -->
+  <div class="container" id="bmiPage">
+    <h1>BMI Calculator</h1>
+    <input type="number" id="weight" placeholder="Weight (kg)" />
+    <input type="number" id="height" placeholder="Height (cm)" />
+    <button onclick="calculateBMI()">Calculate</button>
+    <button onclick="goHome()">Logout</button>
+  </div>
+
+  <!-- Advice Page -->
+  <div class="container" id="advicePage">
+    <img src="exersise.jpg" alt="Health Tip" id="adviceImage">
+    <h1>Your BMI & Health Advice</h1>
+    <p id="result"></p>
+    <div id="bmiAdvice"></div>
+    <button onclick="goHome()">Logout</button>
+  </div>
+
+  <!-- Admin Login Page -->
+  <div class="container" id="adminLoginPage">
+    <h1>Admin Login</h1>
+    <input type="text" id="adminName" placeholder="Admin Name" />
+    <input type="password" id="adminPassword" placeholder="Password" />
+    <button onclick="checkAdmin()">Login</button>
+    <button onclick="goHome()">Back</button>
+  </div>
+
+  <!-- Admin Page -->
+  <div class="container" id="adminPage">
+    <h1>Login Activity</h1>
+    <div id="adminContent"></div>
+    <button onclick="goHome()">Logout</button>
+  </div>
+
+  <script>
+    let loginData = JSON.parse(localStorage.getItem('loginData')) || [];
+
+    function goToLogin() {
+      showPage("loginPage");
+    }
+
+    function goToAdminLogin() {
+      showPage("adminLoginPage");
+    }
+
+    function goHome() {
+      clearInputs();
+      showPage("homePage");
+    }
+
+    function clearInputs() {
+      // Clear user login inputs
+      document.getElementById("name").value = "";
+      document.getElementById("gender").value = "";
+      document.getElementById("contact").value = "";
+
+      // Clear BMI inputs
+      document.getElementById("weight").value = "";
+      document.getElementById("height").value = "";
+
+      // Clear Admin login inputs
+      document.getElementById("adminName").value = "";
+      document.getElementById("adminPassword").value = "";
+
+      // Clear results and advice
+      document.getElementById("result").innerText = "";
+      document.getElementById("bmiAdvice").innerHTML = "";
+    }
+
+    function showPage(id) {
+      document.querySelectorAll(".container").forEach(el => el.style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
+
+    function submitLogin() {
+      const name = document.getElementById("name").value;
+      const gender = document.getElementById("gender").value;
+      const contact = document.getElementById("contact").value;
+
+      if (!name || !gender || !contact) {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      const user = { name, gender, contact };
+      loginData.push(user);
+      localStorage.setItem("loginData", JSON.stringify(loginData));
+      showPage("bmiPage");
+    }
+
+    function calculateBMI() {
+      const weight = parseFloat(document.getElementById("weight").value);
+      const height = parseFloat(document.getElementById("height").value) / 100;
+
+      if (!weight || !height || weight <= 0 || height <= 0) {
+        alert("Please enter valid weight and height.");
+        return;
+      }
+
+      const bmi = weight / (height * height);
+      let category = "";
+      let adviceHTML = "";
+
+      if (bmi < 18.5) {
+        category = "Underweight";
+        adviceHTML = `
+          <h3>Diet Advice:</h3>
+          <ul>
+            <li>Eat more frequently with healthy snacks.</li>
+            <li>Include calorie-dense foods like nuts, seeds, and avocados.</li>
+            <li>Include protein-rich foods like eggs, dairy, and legumes.</li>
+          </ul>
+          <h3>Exercise Advice:</h3>
+          <ul>
+            <li>Focus on strength training to build muscle mass.</li>
+            <li>Avoid excessive cardio that may burn more calories than needed.</li>
+          </ul>
+        `;
+      } else if (bmi < 24.9) {
+        category = "Normal weight";
+        adviceHTML = `
+          <h3>Diet Advice:</h3>
+          <ul>
+            <li>Maintain a balanced diet rich in vegetables, fruits, and whole grains.</li>
+            <li>Stay hydrated and avoid processed sugars.</li>
+          </ul>
+          <h3>Exercise Advice:</h3>
+          <ul>
+            <li>Engage in regular physical activity (150 minutes/week).</li>
+            <li>Mix of cardio and light strength training.</li>
+          </ul>
+        `;
+      } else if (bmi < 29.9) {
+        category = "Overweight";
+        adviceHTML = `
+          <h3>Diet Advice:</h3>
+          <ul>
+            <li>Reduce intake of high-calorie foods and sugary drinks.</li>
+            <li>Increase fiber intake to stay full longer.</li>
+            <li>Track calories and portions.</li>
+          </ul>
+          <h3>Exercise Advice:</h3>
+          <ul>
+            <li>Start with walking, then build up to 30–60 min of cardio daily.</li>
+            <li>Incorporate resistance training 2–3 times per week.</li>
+          </ul>
+        `;
+      } else {
+        category = "Obese";
+        adviceHTML = `
+          <h3>Diet Advice:</h3>
+          <ul>
+            <li>Consult a nutritionist for a personalized plan.</li>
+            <li>Avoid all junk food and high-sugar items.</li>
+            <li>Eat small, frequent meals focused on vegetables and lean proteins.</li>
+          </ul>
+          <h3>Exercise Advice:</h3>
+          <ul>
+            <li>Start with low-impact activities like walking or swimming.</li>
+            <li>Gradually increase intensity as stamina improves.</li>
+            <li>Focus on consistency rather than intensity at first.</li>
+          </ul>
+        `;
+      }
+
+      document.getElementById("result").innerText = `Your BMI is ${bmi.toFixed(2)} (${category})`;
+      document.getElementById("bmiAdvice").innerHTML = adviceHTML;
+      showPage("advicePage");
+    }
+
+    function checkAdmin() {
+      const name = document.getElementById("adminName").value;
+      const pass = document.getElementById("adminPassword").value;
+
+      if (pass === "admin123") {
+        showAdminData();
+        showPage("adminPage");
+      } else {
+        alert("Incorrect admin password.");
+      }
+    }
+
+    function showAdminData() {
+      const container = document.getElementById("adminContent");
+      container.innerHTML = "";
+
+      if (loginData.length === 0) {
+        container.innerHTML = "<p>No login data found.</p>";
+        return;
+      }
+
+      loginData.forEach((user, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <strong>User ${index + 1}</strong><br>
+          Name: ${user.name}<br>
+          Gender: ${user.gender}<br>
+          Contact: ${user.contact}
+        `;
+        container.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
